@@ -1,66 +1,20 @@
 # Email-Domain-Verifier
-package main
-
-import (
-	"bufio"
-	"fmt"
-	"log"
-	"net"
-	"os"
-	"strings"
-)
-
-func main() {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Println("domain,hasMX,hasSPF,spfRecord,hasDMARC,dmarcRecord")
-
-	for scanner.Scan() {
-		checkDomain(scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error could not read from input: %v\n", err)
-	}
-}
-
-func checkDomain(domain string) {
-	var hasMX, hasSPF, hasDMARC bool
-	var spfRecord, dmarcRecord string
-
-	mxRecords, err := net.LookupMX(domain)
-	if err != nil {
-		log.Printf("Error looking up MX records: %v\n", err)
-	}
-
-	if len(mxRecords) > 0 {
-		hasMX = true
-	}
-
-	txtRecords, err := net.LookupTXT(domain)
-	if err != nil {
-		log.Printf("Error looking up TXT records: %v\n", err)
-	}
-
-	for _, record := range txtRecords {
-		if strings.HasPrefix(record, "v=spf1") {
-			hasSPF = true
-			spfRecord = record
-			break
-		}
-	}
-
-	dmarcRecords, err := net.LookupTXT("_dmarc." + domain)
-	if err != nil {
-		log.Printf("Error looking up DMARC records: %v\n", err)
-	}
-
-	for _, record := range dmarcRecords {
-		if strings.HasPrefix(record, "v=DMARC1") {
-			hasDMARC = true
-			dmarcRecord = record
-			break
-		}
-	}
-
-	fmt.Printf("%v, %v, %v, %v, %v, %v\n", domain, hasMX, hasSPF, spfRecord, hasDMARC, dmarcRecord)
-}
+Purpose:
+An email verifier tool validates email addresses to ensure their correctness and existence.
+It helps prevent sending emails to invalid or non-existent addresses, reducing bounce rates and improving deliverability.
+Features:
+Syntax Checking:
+Validates email addresses using regex patterns to ensure they follow the correct format.
+Mail Server Existence Check:
+Verifies the availability of the email address domain by checking DNS records.
+SMTP Verification:
+Performs an email verification lookup via SMTP (Simple Mail Transfer Protocol).
+Detects catch-all email addresses (where all emails to the domain are accepted).
+MX (Mail Exchange) Validation:
+Checks the DNS MX records for the given domain name.
+Miscellaneous Validation:
+Detects free email providers (e.g., Gmail, Yahoo).
+Identifies role accounts (e.g., admin@domain.com, support@domain.com).
+Flags disposable email addresses (DEA).
+Usage Example:
+You can use the email-verifier Go library to verify email addresses:
